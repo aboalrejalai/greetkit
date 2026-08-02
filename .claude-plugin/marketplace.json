@@ -1,0 +1,20 @@
+{
+  "name": "greetkit",
+  "description": "GreetKit: Intent-Driven Development skills marketplace",
+  "owner": {
+    "name": "Abo Alrejal",
+    "email": "aboalrejal.ai@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "greetkit",
+      "description": "GreetKit: Intent-Driven Development skills for coding agents — spec, plan, implement, review",
+      "version": "1.0.0",
+      "source": "./",
+      "author": {
+        "name": "Abo Alrejal",
+        "email": "aboalrejal.ai@gmail.com"
+      }
+    }
+  ]
+}

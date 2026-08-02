@@ -1,0 +1,27 @@
+{
+  "name": "greetkit",
+  "version": "1.0.0",
+  "description": "GreetKit: Intent-Driven Development skills and runtime bootstrap for coding agents",
+  "author": "aboalrejal.ai@gmail.com",
+  "repository": "https://github.com/aboalrejal-ai/greetkit",
+  "type": "module",
+  "main": ".opencode/plugins/greetkit.js",
+  "keywords": [
+    "pi-package",
+    "greetkit",
+    "idd",
+    "skills",
+    "spec",
+    "plan",
+    "implement",
+    "review"
+  ],
+  "pi": {
+    "extensions": [
+      "./.pi/extensions/greetkit.ts"
+    ],
+    "skills": [
+      "./skills"
+    ]
+  }
+}

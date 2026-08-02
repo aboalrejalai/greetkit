@@ -1,0 +1,21 @@
+{
+  "name": "greetkit",
+  "description": "GreetKit: Intent-Driven Development skills for coding agents — spec, plan, implement, review",
+  "version": "1.0.0",
+  "author": {
+    "name": "Abo Alrejal",
+    "email": "aboalrejal@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/aboalrejal-ai/greetkit",
+  "repository": "https://github.com/aboalrejal-ai/greetkit",
+  "license": "MIT",
+  "keywords": [
+    "greetkit",
+    "idd",
+    "skills",
+    "spec",
+    "plan",
+    "implement",
+    "review"
+  ]
+}

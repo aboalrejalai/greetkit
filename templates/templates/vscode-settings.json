@@ -1,0 +1,14 @@
+{
+    "chat.promptFilesRecommendations": {
+        "greetkit.constitution": true,
+        "greetkit.greetkit": true,
+        "greetkit.gk-plan": true,
+        "greetkit.tasks": true,
+        "greetkit.implement": true
+    },
+    "chat.tools.terminal.autoApprove": {
+        ".greetkit/scripts/bash/": true,
+        ".greetkit/scripts/powershell/": true
+    }
+}
+

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# SessionStart hook for GreetKit plugin
+
+set -euo pipefail
+
+# Determine plugin root directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Read using-greetkit content
+using_greetkit_content=$(cat "${PLUGIN_ROOT}/skills/greetkit-using-skills/SKILL.md" 2>&1 || echo "Error reading greetkit-using-skills skill. Please ensure the skill exists.")
+
+# Escape string for JSON embedding using bash parameter substitution.
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+using_greetkit_escaped=$(escape_for_json "$using_greetkit_content")
+session_context="<EXTREMELY_IMPORTANT>\nYou are operating within GreetKit.\n\n**Below is the full content of your 'greetkit-using-skills' skill - your core instruction manual. Read it completely before proceeding.**\n\n${using_greetkit_escaped}\n</EXTREMELY_IMPORTANT>"
+
+# Output context injection as JSON.
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+  # Cursor sets CURSOR_PLUGIN_ROOT
+  printf '{\n  "additional_context": "%s"\n}\n' "$session_context" | cat
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
+  # Claude Code sets CLAUDE_PLUGIN_ROOT
+  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context" | cat
+else
+  # SDK standard format (Copilot CLI, Antigravity)
+  printf '{\n  "additionalContext": "%s"\n}\n' "$session_context" | cat
+fi
+
+exit 0

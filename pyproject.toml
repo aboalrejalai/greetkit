@@ -1,0 +1,25 @@
+[project]
+name = "greetkit"
+version = "0.1.0"
+description = "GreetKit Intent-Driven Development CLI"
+authors = [
+    {name = "Abo Alrejal", email = "aboalrejal.ai@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "click>=8.0.0",
+    "readchar>=4.0.0"
+]
+
+[project.scripts]
+greetkit = "greetkit_cli.main:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/greetkit_cli", "skills", "templates", "scripts"]

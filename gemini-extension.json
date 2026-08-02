@@ -1,0 +1,6 @@
+{
+  "name": "greetkit",
+  "description": "GreetKit: Intent-Driven Development skills for coding agents",
+  "version": "1.0.0",
+  "contextFileName": "GEMINI.md"
+}
