@@ -123,13 +123,16 @@ def init(
     elif not _stdin_is_interactive():
         selected_plugins = ["agy"] # Default fallback for non-interactive
     else:
-        console.print("[cyan]Select the agent integrations you want to install:[/cyan]")
-        for key, name in ai_choices.items():
-            if typer.confirm(f"Install {name} plugin?", default=(key=="claude")):
-                selected_plugins.append(key)
-        
+        from greetkit_cli._console import multiselect_with_checkboxes
+        selected_plugins = multiselect_with_checkboxes(
+            ai_choices,
+            prompt_text="Select agent integrations to install (Space to toggle, Enter to confirm)",
+            default_selected=["claude", "cursor", "agy"]
+        )
         if not selected_plugins:
-            console.print("[yellow]No integrations selected. Falling back to generic GreetKit setup.[/yellow]")
+            console.print("[yellow]No integrations selected. Falling back to default .agents footprint.[/yellow]")
+            selected_plugins = ["agy"]
+
 
     # 4. Choose Script Type (Interactive if not supplied)
     script_choices = {
@@ -257,18 +260,37 @@ def init(
         tracker.start("skills")
         pkg_skills = _find_asset_dir("skills")
         
-        # Determine main skills location
-        # If Antigravity is the only one, we use .agents/skills, else we put them in skills/
-        if "agy" in selected_plugins and len(selected_plugins) == 1:
-            target_skills = target_path / ".agents" / "skills"
-        else:
-            target_skills = target_path / "skills"
-            
+        plugin_skill_dirs = {
+            "claude": target_path / ".claude" / "skills",
+            "cursor": target_path / ".cursor" / "skills",
+            "codex": target_path / ".codex" / "skills",
+            "opencode": target_path / ".opencode" / "skills",
+            "kimi": target_path / ".kimi" / "skills",
+            "agy": target_path / ".agents" / "skills",
+        }
+
+        installed_skill_paths = []
         if pkg_skills and pkg_skills.exists():
-            shutil.copytree(pkg_skills, target_skills, dirs_exist_ok=True)
-            tracker.complete("skills", f"installed into {target_skills.relative_to(target_path)}")
+            target_dirs = [plugin_skill_dirs[p] for p in selected_plugins if p in plugin_skill_dirs]
+            if not target_dirs:
+                target_dirs = [target_path / ".agents" / "skills"]
+
+            for t_dir in target_dirs:
+                shutil.copytree(pkg_skills, t_dir, dirs_exist_ok=True)
+                installed_skill_paths.append(str(t_dir.relative_to(target_path)))
+
+            # Copy skills.sh.json to project root
+            pkg_skills_json = _find_asset_dir("skills.sh.json")
+            if pkg_skills_json and pkg_skills_json.exists():
+                try:
+                    shutil.copy2(pkg_skills_json, target_path / "skills.sh.json")
+                except Exception:
+                    pass
+
+            tracker.complete("skills", f"installed into {', '.join(installed_skill_paths)}")
         else:
             tracker.error("skills", "skills path not found in package")
+
 
         # Scaffold Hooks
         tracker.add("hooks", "Install GreetKit hooks")

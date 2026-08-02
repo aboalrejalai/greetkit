@@ -133,6 +133,9 @@ def get_key():
     if key == readchar.key.ENTER:
         return 'enter'
 
+    if key == readchar.key.SPACE or key == ' ':
+        return 'space'
+
     if key == readchar.key.ESC:
         return 'escape'
 
@@ -212,6 +215,82 @@ def select_with_arrows(
         raise typer.Exit(code=1)
 
     return selected_key
+
+
+def multiselect_with_checkboxes(
+    options: dict[str, str],
+    prompt_text: str = "Select agent integrations",
+    default_selected: list[str] | None = None,
+) -> list[str]:
+    """Interactive multi-selection with checkboxes using arrow keys and spacebar."""
+    if not options:
+        raise ValueError("multiselect_with_checkboxes() requires at least one option.")
+
+    option_keys = list(options.keys())
+    selected_set = set(default_selected) if default_selected is not None else set(option_keys)
+    current_index = 0
+
+    def create_multiselect_panel():
+        table = Table.grid(padding=(0, 2))
+        table.add_column(style="cyan", justify="left", width=3)
+        table.add_column(style="white", justify="left")
+
+        for i, key in enumerate(option_keys):
+            is_checked = key in selected_set
+            checkbox = "[green]✓[/green]" if is_checked else "[dim]✗[/dim]"
+            
+            cursor = "▶" if i == current_index else " "
+            label_style = "cyan bold" if i == current_index else "white"
+            
+            table.add_row(
+                cursor,
+                f"[{checkbox}] [{label_style}]{key}[/{label_style}] [dim]({options[key]})[/dim]"
+            )
+
+        table.add_row("", "")
+        table.add_row("", "[dim]Use ↑/↓ to navigate, Space to toggle, Enter to confirm, Esc to cancel[/dim]")
+
+        return Panel(
+            table,
+            title=f"[bold]{prompt_text}[/bold]",
+            border_style="cyan",
+            padding=(1, 2)
+        )
+
+    console.print()
+
+    def run_multiselect_loop():
+        nonlocal current_index
+        _transient = sys.platform != "win32"
+        with Live(create_multiselect_panel(), console=console, transient=_transient, auto_refresh=False) as live:
+            while True:
+                try:
+                    key = get_key()
+                    if key == 'up':
+                        current_index = (current_index - 1) % len(option_keys)
+                    elif key == 'down':
+                        current_index = (current_index + 1) % len(option_keys)
+                    elif key == 'space':
+                        curr_key = option_keys[current_index]
+                        if curr_key in selected_set:
+                            selected_set.remove(curr_key)
+                        else:
+                            selected_set.add(curr_key)
+                    elif key == 'enter':
+                        break
+                    elif key == 'escape':
+                        console.print("\n[yellow]Selection cancelled[/yellow]")
+                        raise typer.Exit(code=1)
+
+                    live.update(create_multiselect_panel(), refresh=True)
+
+                except KeyboardInterrupt:
+                    console.print("\n[yellow]Selection cancelled[/yellow]")
+                    raise typer.Exit(code=1)
+
+    run_multiselect_loop()
+    return [k for k in option_keys if k in selected_set]
+
 
 class BannerGroup(TyperGroup):
     """Custom group that shows banner before help."""

@@ -29,3 +29,4 @@ packages = ["src/greetkit_cli"]
 "templates" = "greetkit_cli/templates"
 "scripts" = "greetkit_cli/scripts"
 "hooks" = "greetkit_cli/hooks"
+"skills.sh.json" = "greetkit_cli/skills.sh.json"

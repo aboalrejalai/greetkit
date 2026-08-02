@@ -1,0 +1,38 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "groupings": [
+    {
+      "title": "GreetKit IDD Core Lifecycle",
+      "description": "Intent-Driven Development workflow skills: spec, plan, tasks, implement, review, analyze, constitution.",
+      "skills": [
+        "greetkit-spec",
+        "greetkit-plan",
+        "greetkit-tasks",
+        "greetkit-implement",
+        "greetkit-review",
+        "greetkit-analyze",
+        "greetkit-constitution"
+      ]
+    },
+    {
+      "title": "GreetKit Quality & Guardrails",
+      "description": "Security, clean code, docs verification, and test suite quality gates.",
+      "skills": [
+        "greetkit-security",
+        "greetkit-clean-code-guard",
+        "greetkit-docs-guard",
+        "greetkit-test-guard",
+        "greetkit-source-driven",
+        "greetkit-using-skills"
+      ]
+    },
+    {
+      "title": "GreetKit UI & Testing",
+      "description": "Scroll animations (GSAP/Framer) and Playwright runtime webapp testing.",
+      "skills": [
+        "greetkit-frame-animation",
+        "greetkit-webapp-testing"
+      ]
+    }
+  ]
+}
