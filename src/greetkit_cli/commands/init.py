@@ -107,16 +107,19 @@ def init(
 
     # 3. Choose Integration (Interactive if not supplied)
     ai_choices = {
-        "claude": "Claude Desktop / Claude Code",
-        "cursor": "Cursor IDE",
-        "codex": "Codex / OpenCode",
-        "kimi": "Kimi Plugin",
-        "agy": "Antigravity Agent Integration"
+        "all": "All / Universal Agent Support (deploys to all IDE & Agent paths)",
+        "claude": "Claude Desktop / Claude Code CLI (.claude/skills)",
+        "cursor": "Cursor IDE (.cursor/skills)",
+        "codex": "OpenAI Codex CLI (.codex/skills)",
+        "opencode": "OpenCode CLI (.opencode/skills)",
+        "kimi": "Kimi Code CLI (.kimi/skills)",
+        "pi": "Pi Coding Agent (.pi/skills & .agents/skills)",
+        "agy": "Google Antigravity / Gemini CLI (.agents/skills)",
     }
     
     selected_plugins = []
     if integration:
-        if integration not in ai_choices:
+        if integration not in ai_choices and integration != "all":
             console.print(f"[red]Error:[/red] Unknown integration '{integration}'. Available: {', '.join(ai_choices.keys())}")
             raise typer.Exit(1)
         selected_plugins.append(integration)
@@ -127,11 +130,15 @@ def init(
         selected_plugins = multiselect_with_checkboxes(
             ai_choices,
             prompt_text="Select agent integrations to install (Space to toggle, Enter to confirm)",
-            default_selected=["claude", "cursor", "agy"]
+            default_selected=["all", "claude", "cursor", "agy"]
         )
         if not selected_plugins:
             console.print("[yellow]No integrations selected. Falling back to default .agents footprint.[/yellow]")
             selected_plugins = ["agy"]
+
+    if "all" in selected_plugins:
+        selected_plugins = ["all", "claude", "cursor", "codex", "opencode", "kimi", "pi", "agy"]
+
 
 
     # 4. Choose Script Type (Interactive if not supplied)
@@ -163,6 +170,8 @@ def init(
     console.print(Panel("\n".join(setup_lines), border_style="cyan", padding=(1, 2)))
     console.print(f"[cyan]Selected agent integration(s):[/cyan] {', '.join(selected_plugins)}")
     console.print(f"[cyan]Selected script type:[/cyan] {selected_script}")
+
+    target_dirs: list[Path] = []
 
     # Initialize Tree Step Tracker
     tracker = StepTracker("Initialize GreetKit Project")
@@ -266,6 +275,7 @@ def init(
             "codex": target_path / ".codex" / "skills",
             "opencode": target_path / ".opencode" / "skills",
             "kimi": target_path / ".kimi" / "skills",
+            "pi": target_path / ".pi" / "skills",
             "agy": target_path / ".agents" / "skills",
         }
 
@@ -278,6 +288,7 @@ def init(
             for t_dir in target_dirs:
                 shutil.copytree(pkg_skills, t_dir, dirs_exist_ok=True)
                 installed_skill_paths.append(str(t_dir.relative_to(target_path)))
+
 
             # Copy skills.sh.json to project root
             pkg_skills_json = _find_asset_dir("skills.sh.json")
@@ -581,20 +592,21 @@ hooks:
                         "author": "aboalrejal.ai@gmail.com"
                     }, f, indent=2)
                     
-            elif plugin == "agy":
-                # Ensure .agents exists
-                agents_dir = target_path / ".agents"
-                agents_dir.mkdir(exist_ok=True)
-                
-                skills_files = {}
-                if target_skills.exists():
-                    for md_file in target_skills.rglob("*.md"):
-                        rel_path = md_file.relative_to(target_path)
-                        skills_files[str(rel_path).replace("\\", "/")] = get_sha256(md_file)
-                manifest["files"] = skills_files
-            
+            # Generate SHA256 hashes of installed skill files
+            skills_files = {}
+            for t_dir in target_dirs:
+                if t_dir.exists():
+                    for md_file in t_dir.rglob("*.md"):
+                        try:
+                            rel_path = md_file.relative_to(target_path)
+                            skills_files[str(rel_path).replace("\\", "/")] = get_sha256(md_file)
+                        except Exception:
+                            pass
+            manifest["files"] = skills_files
+
             with open(target_path / "greetkit" / "internal" / "integrations" / f"{plugin}.manifest.json", "w", encoding="utf-8") as f:
                 json.dump(manifest, f, indent=2)
+
 
         tracker.complete("final", "Project ready!")
 
