@@ -200,14 +200,22 @@ def init(
             (target_path / d).mkdir(parents=True, exist_ok=True)
         tracker.complete("dirs", "created GreetKit footprint")
 
-        # Import package locations
+        # Import package locations helper
         import greetkit_cli
-        pkg_dir = Path(greetkit_cli.__file__).parent.parent.parent
+        def _find_asset_dir(name: str) -> Path | None:
+            cli_dir = Path(greetkit_cli.__file__).resolve().parent
+            if (cli_dir / name).is_dir():
+                return cli_dir / name
+            if (cli_dir.parent / name).is_dir():
+                return cli_dir.parent / name
+            if (cli_dir.parent.parent / name).is_dir():
+                return cli_dir.parent.parent / name
+            return None
 
         # Scaffold Core Assets (templates, extensions, workflows, integrations, memory)
         tracker.start("templates")
-        pkg_templates = pkg_dir / "templates"
-        if pkg_templates.exists():
+        pkg_templates = _find_asset_dir("templates")
+        if pkg_templates and pkg_templates.exists():
             shutil.copytree(pkg_templates, target_path / "greetkit" / "internal", dirs_exist_ok=True)
             tracker.complete("templates", "copied structures to greetkit/internal")
         else:
@@ -224,8 +232,8 @@ def init(
 
         # Scaffold Shared Scripts
         tracker.start("scripts")
-        pkg_scripts = pkg_dir / "scripts"
-        if pkg_scripts.exists():
+        pkg_scripts = _find_asset_dir("scripts")
+        if pkg_scripts and pkg_scripts.exists():
             variant_name = "powershell" if selected_script == "ps" else "bash"
             src_variant = pkg_scripts / variant_name
             dst_variant = target_path / "greetkit" / "internal" / "scripts" / variant_name
@@ -247,7 +255,7 @@ def init(
 
         # Scaffold Skills
         tracker.start("skills")
-        pkg_skills = pkg_dir / "skills"
+        pkg_skills = _find_asset_dir("skills")
         
         # Determine main skills location
         # If Antigravity is the only one, we use .agents/skills, else we put them in skills/
@@ -256,7 +264,7 @@ def init(
         else:
             target_skills = target_path / "skills"
             
-        if pkg_skills.exists():
+        if pkg_skills and pkg_skills.exists():
             shutil.copytree(pkg_skills, target_skills, dirs_exist_ok=True)
             tracker.complete("skills", f"installed into {target_skills.relative_to(target_path)}")
         else:
@@ -265,14 +273,14 @@ def init(
         # Scaffold Hooks
         tracker.add("hooks", "Install GreetKit hooks")
         tracker.start("hooks")
-        pkg_hooks = pkg_dir / "hooks"
+        pkg_hooks = _find_asset_dir("hooks")
         
         if "agy" in selected_plugins and len(selected_plugins) == 1:
             target_hooks = target_path / ".agents" / "hooks"
         else:
             target_hooks = target_path / "hooks"
             
-        if pkg_hooks.exists():
+        if pkg_hooks and pkg_hooks.exists():
             shutil.copytree(pkg_hooks, target_hooks, dirs_exist_ok=True)
             
             # Make sure run-hook.cmd and session-start have proper executable permissions if possible
@@ -284,6 +292,7 @@ def init(
             tracker.complete("hooks", f"installed into {target_hooks.relative_to(target_path)}")
         else:
             tracker.error("hooks", "hooks path not found in package")
+
 
         # Finalize and write config files
         tracker.start("final")
